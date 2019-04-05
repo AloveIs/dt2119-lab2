@@ -1,9 +1,7 @@
 import numpy as np
 from lab2_tools import *
-import pprint
 
-pp = pprint.PrettyPrinter(indent=4)
-
+np.set_printoptions(precision=3)
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -27,31 +25,43 @@ def concatTwoHMMs(hmm1, hmm2):
             covars: KxD array of variances
 
     K is the sum of the number of emitting states from the input models
-   
+
     Example:
        twoHMMs = concatHMMs(phoneHMMs['sil'], phoneHMMs['ow'])
 
     See also: the concatenating_hmms.pdf document in the lab package
     """
     result_hmm = dict()
-    print(hmm1["transmat"])
+
+
 
     M = hmm1["transmat"].shape[0]
-    print(M)
-    K = M + 3   
+    K = M + 3
+
+    # arrays to concatenate
     sp_1 = hmm1["startprob"][:(M-1)]
     sp_2 = hmm1["startprob"][(M-1)]*hmm2["startprob"]
 
     result_hmm["startprob"] = np.concatenate((sp_1,sp_2))
 
-    print(result_hmm["startprob"])
- 
-    
+    # compute transition prob
     result_hmm["transmat"] = np.zeros([K,K])
     result_hmm["transmat"][:M,:M] = hmm1["transmat"]
     result_hmm["transmat"][M-1:,M-1:] = hmm2["transmat"]
+    result_hmm["transmat"][:M-1,M-1:] = np.outer(hmm1["transmat"][:M-1,-1],hmm2["startprob"])
     result_hmm["transmat"][-1,-1] = 1
-    print(result_hmm["transmat"])
+
+    # concatenate means
+
+    result_hmm["means"] = np.vstack((hmm1["means"], hmm2["means"]))
+
+    # concatenate variances
+
+    result_hmm["covars"] = np.vstack((hmm1["covars"], hmm2["covars"]))
+
+    # concatenate names
+
+    result_hmm["name"] = hmm1["name"] + ", " + hmm2["name"]
 
     return result_hmm
 
@@ -61,7 +71,7 @@ def concatHMMs(hmmmodels, namelist):
     """ Concatenates HMM models in a left to right manner
 
     Args:
-       hmmmodels: dictionary of models indexed by model name. 
+       hmmmodels: dictionary of models indexed by model name.
        hmmmodels[name] is a dictionaries with the following keys:
            name: phonetic or word symbol corresponding to the model
            startprob: M+1 array with priori probability of state
