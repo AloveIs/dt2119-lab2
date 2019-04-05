@@ -1,5 +1,9 @@
 import numpy as np
-from tools2 import *
+from lab2_tools import *
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -29,6 +33,28 @@ def concatTwoHMMs(hmm1, hmm2):
 
     See also: the concatenating_hmms.pdf document in the lab package
     """
+    result_hmm = dict()
+    print(hmm1["transmat"])
+
+    M = hmm1["transmat"].shape[0]
+    print(M)
+    K = M + 3   
+    sp_1 = hmm1["startprob"][:(M-1)]
+    sp_2 = hmm1["startprob"][(M-1)]*hmm2["startprob"]
+
+    result_hmm["startprob"] = np.concatenate((sp_1,sp_2))
+
+    print(result_hmm["startprob"])
+ 
+    
+    result_hmm["transmat"] = np.zeros([K,K])
+    result_hmm["transmat"][:M,:M] = hmm1["transmat"]
+    result_hmm["transmat"][M-1:,M-1:] = hmm2["transmat"]
+    result_hmm["transmat"][-1,-1] = 1
+    print(result_hmm["transmat"])
+
+    return result_hmm
+
 
 # this is already implemented, but based on concat2HMMs() above
 def concatHMMs(hmmmodels, namelist):
