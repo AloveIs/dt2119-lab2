@@ -127,6 +127,17 @@ def forward(log_emlik, log_startprob, log_transmat):
     Output:
         forward_prob: NxM array of forward log probabilities for each of the M states in the model
     """
+    N = log_emlik.shape[0]
+    M = log_emlik.shape[1]
+    forward_prob = np.zeros(log_emlik.shape)
+
+    forward_prob[0, :] = log_startprob[:-1] + log_emlik[0, :]
+
+    for n in range(1, N):
+        for j in range(M):
+            forward_prob[n, j] = logsumexp(forward_prob[n-1, :] + log_transmat[:-1, j]) + log_emlik[n, j]
+
+    return forward_prob
 
 def backward(log_emlik, log_startprob, log_transmat):
     """Backward (beta) probabilities in log domain.
@@ -154,6 +165,38 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
         viterbi_loglik: log likelihood of the best path
         viterbi_path: best path
     """
+    N = log_emlik.shape[0]
+    M = log_emlik.shape[1]
+
+    V = np.zeros(log_emlik.shape)
+    B = np.zeros(log_emlik.shape)
+
+    # Initialization
+    V[0, :] = log_startprob[0] + log_emlik[0, :]
+    B[0, :] = 0
+
+    # Induction
+    for i in range(1, N):
+        for j in range(M):
+           V[i, j] = np.max(V[i-1, :] + log_transmat[i, j]) + log_emlik[i, j]
+           B[i, j] = np.argmax(V[i-1, :] + log_transmat[i, j])
+
+    # Termination
+    best = np.max(V[-1, :])
+    sN = np.argmax(B[-1, :])
+
+    # Backtracking
+    st = np.zeros(N)
+    st[-1] = sN
+    for i in reversed(range(N-1)):
+        st[i] = B[i+1, st[i+1]]
+
+
+    viterbi_loglik = best
+    viterbi_path = st
+
+    return viterbi_loglik, viterbi_path
+
 
 def statePosteriors(log_alpha, log_beta):
     """State posterior (gamma) probabilities in log domain.
