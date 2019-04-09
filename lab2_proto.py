@@ -221,6 +221,10 @@ def statePosteriors(log_alpha, log_beta):
         log_gamma: NxM array of gamma probabilities for each of the M states in the model
     """
 
+    return log_alpha + log_beta - logsumexp(log_alpha[-1,:])
+
+
+
 def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
     """ Update Gaussian parameters with diagonal covariance
 

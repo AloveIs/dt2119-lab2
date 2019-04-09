@@ -88,10 +88,34 @@ if False:
     print(example['vloglik'])
 
 ##### Section 5.4
+if False:
+    backward_prob = backward(example['obsloglik'],
+            np.log(wordHMMs['o']["startprob"]),
+            np.log(wordHMMs['o']["transmat"]))
 
-backward_prob = backward(example['obsloglik'],
-        np.log(wordHMMs['o']["startprob"]),
-        np.log(wordHMMs['o']["transmat"]))
+    print(np.sum(np.abs(backward_prob)))
+    print(np.sum(np.abs(example["logbeta"])))
 
-print(np.sum(np.abs(backward_prob)))
-print(np.sum(np.abs(example["logbeta"])))
+##### Section 6.1
+if False:
+    forward_prob = forward(example['obsloglik'],
+            np.log(wordHMMs['o']["startprob"]),
+            np.log(wordHMMs['o']["transmat"]))
+    backward_prob = backward(example['obsloglik'],
+            np.log(wordHMMs['o']["startprob"]),
+            np.log(wordHMMs['o']["transmat"]))
+    state_posterior = statePosteriors(forward_prob, backward_prob)
+
+    GMM_state_posterior = np.zeros(state_posterior.shape)
+    HMM = wordHMMs['o']
+    print(HMM["means"].shape)
+    GMM_state_posterior = log_multivariate_normal_density_diag(
+           example['lmfcc'], HMM["means"], HMM["covars"])
+    for i in range(GMM_state_posterior.shape[0]):
+        GMM_state_posterior[i, :] = GMM_state_posterior[i, :] - logsumexp(GMM_state_posterior[i, :])
+
+    print(np.sum(np.exp(GMM_state_posterior), axis = 1))
+
+
+
+# print(np.sum(np.exp(state_posterior)))
