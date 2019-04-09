@@ -116,6 +116,44 @@ if False:
 
     print(np.sum(np.exp(GMM_state_posterior), axis = 1))
 
+##### Section 6.2
 
+phoneHMMs = all_model['phoneHMMs'].item()
 
-# print(np.sum(np.exp(state_posterior)))
+wordHMMs_all_model = {}
+for key in isolated.keys():
+    wordHMMs_all_model[key] = concatHMMs(phoneHMMs, isolated[key])
+
+data_10 = data[10]
+HMM = wordHMMs_all_model["9"]
+
+max_iters = 20
+
+means = HMM["means"]
+covars = HMM["covars"]
+
+log_likelihood = +np.inf
+for i in range(max_iters):
+    obs_log_lik = log_multivariate_normal_density_diag(data_10["lmfcc"],
+                means,
+                covars)
+
+    forward_prob = forward(obs_log_lik,
+                np.log(HMM["startprob"]),
+                np.log(HMM["transmat"]))
+
+    backward_prob = backward(obs_log_lik,
+            np.log(HMM["startprob"]),
+            np.log(HMM["transmat"]))
+
+    log_likelihood_new = logsumexp(forward_prob[-1, :])
+
+    if abs(log_likelihood_new - log_likelihood) < 1:
+        break
+
+    log_likelihood = log_likelihood_new
+    print(log_likelihood)
+
+    log_gamma = statePosteriors(forward_prob, backward_prob)
+
+    means, covars = updateMeanAndVar(data_10["lmfcc"], log_gamma, varianceFloor=5.0)
