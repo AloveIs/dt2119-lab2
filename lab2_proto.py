@@ -151,6 +151,17 @@ def backward(log_emlik, log_startprob, log_transmat):
         backward_prob: NxM array of backward log probabilities for each of the M states in the model
     """
 
+    N = log_emlik.shape[0]
+    M = log_emlik.shape[1]
+
+    backward_prob = np.zeros([N,M])
+
+    for i in reversed(range(N-1)):
+        for j in range(M):
+            backward_prob[i,j] = logsumexp(log_transmat[j,:-1] + log_emlik[i+1,:] + backward_prob[i+1,:])
+
+    return backward_prob
+
 def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     """Viterbi path.
 
@@ -161,7 +172,7 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
         forceFinalState: if True, start backtracking from the final state in
                   the model, instead of the best state at the last time step
 
-    Output:
+    Output:##### Section 5.3
         viterbi_loglik: log likelihood of the best path
         viterbi_path: best path
     """
@@ -172,14 +183,14 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     B = np.zeros(log_emlik.shape)
 
     # Initialization
-    V[0, :] = log_startprob[0] + log_emlik[0, :]
+    V[0, :] = log_startprob[:-1] + log_emlik[0, :]
     B[0, :] = 0
 
     # Induction
     for i in range(1, N):
         for j in range(M):
-           V[i, j] = np.max(V[i-1, :] + log_transmat[i, j]) + log_emlik[i, j]
-           B[i, j] = np.argmax(V[i-1, :] + log_transmat[i, j])
+            V[i, j] = np.max(V[i-1, :] + log_transmat[:-1, j]) + log_emlik[i, j]
+            B[i, j] = np.argmax(V[i-1, :] + log_transmat[:-1, j])
 
     # Termination
     best = np.max(V[-1, :])
@@ -189,7 +200,7 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     st = np.zeros(N)
     st[-1] = sN
     for i in reversed(range(N-1)):
-        st[i] = B[i+1, st[i+1]]
+        st[i] = B[i+1, int(st[i+1])]
 
 
     viterbi_loglik = best

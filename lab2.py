@@ -78,20 +78,20 @@ if False:
     print(scores)
 
 ##### Section 5.3
+if False:
+    viterbi_loglik, viterbi_path = viterbi(example['obsloglik'],
+            np.log(wordHMMs['o']["startprob"]),
+            np.log(wordHMMs['o']["transmat"]))
 
-viterbi_loglik, viterbi_path = viterbi(example['obsloglik'],
+    #print(viterbi_loglik)
+    print(viterbi_loglik)
+    print(example['vloglik'])
+
+##### Section 5.4
+
+backward_prob = backward(example['obsloglik'],
         np.log(wordHMMs['o']["startprob"]),
         np.log(wordHMMs['o']["transmat"]))
 
-#print(viterbi_loglik)
-print(example['vloglik'])
-
-#backward_prob = backward(example['obsloglik'],
-        #np.log(wordHMMs['o']["startprob"]),
-        #np.log(wordHMMs['o']["transmat"]))
-
-#print(backward_prob)
-#print(example["logalpha"])
-
-
-
+print(np.sum(np.abs(backward_prob)))
+print(np.sum(np.abs(example["logbeta"])))
